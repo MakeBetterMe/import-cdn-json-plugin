@@ -1,0 +1,30 @@
+{
+  "name": "import-cdn-json-plugin",
+  "version": "1.0.0",
+  "description": "webpack插件，developer能够用同步的方式导入来自于cdn上的json文件",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MakeBetterMe/import-cdn-json-plugin.git"
+  },
+  "keywords": [
+    "webpack",
+    "import",
+    "esm",
+    "import",
+    "json",
+    "import",
+    "cdn",
+    "webpack",
+    "plugin"
+  ],
+  "author": "yunpeng.wang",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MakeBetterMe/import-cdn-json-plugin/issues"
+  },
+  "homepage": "https://github.com/MakeBetterMe/import-cdn-json-plugin#readme"
+}
