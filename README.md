@@ -1,5 +1,5 @@
 # import-cdn-json-plugin
-webpack插件，developer能够用同步的方式导入来自于cdn上的json文件
+webpack插件，开发者能够使用用同步的方式导入来自于cdn上的json文件
 
 ## 安装
 ```bash
