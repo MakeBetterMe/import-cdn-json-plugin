@@ -26,5 +26,9 @@
   "bugs": {
     "url": "https://github.com/MakeBetterMe/import-cdn-json-plugin/issues"
   },
-  "homepage": "https://github.com/MakeBetterMe/import-cdn-json-plugin#readme"
+  "homepage": "https://github.com/MakeBetterMe/import-cdn-json-plugin#readme",
+  "devDependencies": {
+    "webpack": "^5.75.0",
+    "webpack-sources": "^3.2.3"
+  }
 }

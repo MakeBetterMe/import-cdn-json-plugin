@@ -1,56 +1,104 @@
-const fetch = require('node-fetch');
-const path = require('path');
+const ConcatSource = require('webpack-sources').ConcatSource;
+const {Compilation} = require('webpack');
+const pluginName = "ImportCdnJsonPlugin";
 
 class ImportCdnJsonPlugin {
   constructor(options) {
     this.options = options;
-    this.jsonData = new Map();
   }
 
   apply(compiler) {
-    // 在完成模块加载之后，为每个JSON文件提前获取内容
-    compiler.hooks.compilation.tap('ImportCdnJsonPlugin', compilation => {
-      compilation.hooks.finishModules.tapAsync('ImportCdnJsonPlugin', (modules, callback) => {
-        // 遍历每个模块
-        modules.forEach(module => {
-          // 如果是JSON文件，则获取文件内容并保存到Map中
-          if (module.type === 'json') {
-            const url = module.userRequest;
-            fetch(url).then(res => res.json()).then(json => {
-              this.jsonData.set(url, json);
-              callback();
-            });
-          }
-        });
-        callback();
-      });
-    });
+    compiler.hooks.compilation.tap(ImportCdnJsonPlugin, (compilation) => {
+      compilation.hooks.processAssets.tap(
+        {
+          name: 'MyPlugin',
+          stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONS, // see below for more stages
+        },
+        (assets) => {
+          console.log('List of assets and their sizes:');
+          Object.entries(assets).forEach(([pathname, source]) => {
+            console.log(`— ${pathname}: ${source.size()} bytes`);
+          });
+        }
+      );
+    // compiler.hooks.compilation.tap(pluginName, (compilation) => {
+    //   compilation.hooks.buildModule.tap(pluginName, (module) => {
+    //     console.log('在模块构建开始之前触发，可以用来修改模块');
+    //     // console.log('module id',module.id);
+    //     // console.log('module name',module.name);
+    //     // console.log('module-->',Object.keys(module));
+    //     // console.log('module buildInfo',module.buildInfo);
+    //     // 获取模块源代码
+    //     const source = module.originalSource().source();
+    //     console.log('source-->',source)
+    //     // 对源代码进行自定义处理
+    //     // const newSource = `console.log("插入的代码");${source}`;
+    //     // // 更新模块的源代码
+    //     // module._source = new RawSource(newSource);
+    //     // callback();
+    //   })
 
-    // 在生成Chunk时，将JSON内容打包为一个JavaScript模块
-    compiler.hooks.emit.tapAsync('ImportCdnJsonPlugin', (compilation, callback) => {
-      const content = `module.exports = ${JSON.stringify(Object.fromEntries(this.jsonData))};`;
-      compilation.assets['json-data.js'] = {
-        source: () => content,
-        size: () => content.length
-      };
-      callback();
-    });
 
-    // 在模块执行前，替换JSON导入语句为对应的JSON内容
-    compiler.hooks.normalModuleFactory.tap('ImportCdnJsonPlugin', factory => {
-      factory.hooks.parser.for('javascript/auto').tap('ImportCdnJsonPlugin', parser => {
-        parser.hooks.expression.for('CallExpression').tap('ImportCdnJsonPlugin', expr => {
-          if (expr.callee.type === 'Import' && /\.json$/.test(expr.arguments[0].value)) {
-            const url = expr.arguments[0].value;
-            const jsonDataPath = path.resolve(__dirname, 'json-data.js');
-            const replacement = `require('${jsonDataPath}')['${url}']`;
-            const source = parser.state.current._source._value;
-            parser.state.current._source._value = source.slice(0, expr.range[0]) + replacement + source.slice(expr.range[1]);
-          }
-        });
-      });
+      // compilation.hooks.optimizeChunkAssets.tapAsync(
+      //   pluginName,
+      //   (chunks, callback) => {
+      //     chunks.forEach((chunk) => {
+      //       chunk.files.forEach((file) => {
+      //         if (file.endsWith('.js')) {
+      //           const source = compilation.assets[file].source();
+      //           console.log('source-->',source);
+                // const processedSource = this.processImports(source);
+                // compilation.assets[file] = {
+                //   source: () => processedSource,
+                //   size: () => processedSource.length,
+                // };
+        //       }
+        //     });
+        //   });
+        //   callback();
+        // },
+      // );
     });
   }
+
+  // async processImports(source) {
+  //   const importRegexp = /import\s+(\w+)\s+from\s+'([^']+)';/g;
+  //   const imports = {};
+  //   let result;
+  //   while ((result = importRegexp.exec(source))) {
+  //     const [match, variable, path] = result;
+  //     if (path.endsWith('.json')) {
+  //       imports[variable] = path;
+  //     }
+  //   }
+  //
+  //   if (Object.keys(imports).length === 0) {
+  //     return source;
+  //   }
+  //
+  //   const processedImports = Promise.all(
+  //     Object.entries(imports).map(([variable, path]) =>
+  //       fetch(path).then((response) => response.json()),
+  //     ),
+  //   ).then((results) => {
+  //     results.forEach((result, index) => {
+  //       const [variable] = Object.entries(imports)[index];
+  //       source = source.replace(
+  //         new RegExp(`${variable}\\s*=\\s*require\\('${imports[variable]}'\\);`),
+  //         `${variable} = ${JSON.stringify(result)};`,
+  //       );
+  //     });
+  //     return source;
+  //   });
+  //
+  //   const moduleWrapper = `
+  //     async function () {
+  //       await (${JSON.stringify(processedImports)});
+  //       ${source}
+  //     }
+  //   `;
+  //   return moduleWrapper;
+  // }
 }
 
 module.exports = ImportCdnJsonPlugin;
