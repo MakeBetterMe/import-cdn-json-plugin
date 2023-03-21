@@ -1,5 +1,6 @@
 const ModuleFederationPlugin = require('webpack').container.ModuleFederationPlugin
 
+//FIXME:参考experiments.buildHttp.allowedUris的写法，实现一个插件，可以在webpack中使用import 动态导入远程json文件
 class ImportCdnJsonPlugin {
   constructor(options) {
     this._options = options || {}
